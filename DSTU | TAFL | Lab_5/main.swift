@@ -1,19 +1,8 @@
 import Foundation
 class System {
     let success = "✅ Successfully! ✅"
-    let error = "🟥 Error! 🟥"
-    let separator = "▼——————————————————————▼"
+    let error = "🚨 Error! 🚨"
     
-    func replaceFirstLetter(array: [String], replaceable: Character, replaceOn: Character) -> [String] {
-        var arrayCopy = array
-        for v in 0..<arrayCopy.count {
-            if String(arrayCopy[v][arrayCopy[v].startIndex]) == String(replaceable) {
-                arrayCopy[v].remove(at: arrayCopy[v].startIndex)
-                arrayCopy[v] = [replaceOn] + arrayCopy[v]
-            }
-        }
-        return arrayCopy
-    }
     func getDataFromUser(message: String) -> String {
         print(message)
         return readLine() ?? getDataFromUser(message: error + "\n" + message)
@@ -21,7 +10,6 @@ class System {
     func getIntFromUser(message: String) -> Int {
         return Int(getDataFromUser(message: message)) ?? getIntFromUser(message: error + "\n" + message)
     }
-    
     
     let lengthDefend = {(input: String, length: Int) -> Bool in
         input.count == length ? false: true
@@ -35,11 +23,10 @@ class System {
     func defend(stop: Bool, defences: [Bool]) -> (Bool,Bool) {
         stop == true ? (true, false): defences.contains(true) ? (false, true): (false, false)
     }
-    
 }
-class Vertices: System {
+class Vertices: System{
     //DATA
-    var values: [String]
+    var values: [String] = []
     //CREATE DATA
     func createValues() {
         let input = getIntFromUser(message: "▶ Введите количество вершин: ")
@@ -53,15 +40,12 @@ class Vertices: System {
             }
         }
     }
-    //INIT'S
+    //INIT
     init(values: [String]) {
         self.values = values
     }
-    override init() {
-        self.values = []
-    }
 }
-class Alphabet: System {
+class Alphabet: System{
     //DATA
     var values: [String]
     //CREATE DATA
@@ -83,29 +67,21 @@ class Alphabet: System {
             }
         }
     }
-    //INIT'S
+    //INIT
     init(values: [String]) {
         self.values = values
-    }
-    override init() {
-        self.values = []
     }
 }
 class StartVertices: System {
     //DATA
     let valueQ: String = "q0"
-    var valuesS: [String]
-    var valuesP: [String]
+    var valuesS: [String] = []
+    var valuesP: [String] = []
     //CREATE DATA
     func createValuesS(epsilonClosure: EpsilonClosure) {
         if let epsilonValue = epsilonClosure.dictionary[valueQ] {
-            valuesS = replaceFirstLetter(array: epsilonValue, replaceable: "q", replaceOn: "S")
+            valuesS = epsilonValue.map({$0.replacing("q", with: "S")})
         }
-    }
-    //INIT'S
-    override init() {
-        self.valuesS = []
-        self.valuesP = []
     }
 }
 class Transitions: System {
@@ -136,17 +112,14 @@ class Transitions: System {
             }
         }
     }
-    //INIT'S
+    //INIT
     init(dictionary: [String : [String]]) {
         self.dictionary = dictionary
-    }
-    override init() {
-        self.dictionary = [:]
     }
 }
 class EpsilonClosure: System {
     //DATA
-    var dictionary: [String: [String]]
+    var dictionary: [String: [String]] = [:]
     //CREATE DATA
     func createDictionary(vertices: Vertices, alphabet: Alphabet, transitions: Transitions) {
         self.dictionary = [:]
@@ -172,14 +145,10 @@ class EpsilonClosure: System {
             bin = []
         }
     }
-    //INIT'S
-    override init() {
-        self.dictionary = [:]
-    }
 }
 class TableS: System {
     //DATA
-    var dictionary: [String: [String]]
+    var dictionary: [String: [String]] = [:]
     //CREATE DATA
     func createDictionary(vertices: Vertices, alphabet: Alphabet, transitions: Transitions, epsilonClosures: EpsilonClosure) {
         //Берем епсилон замыкание arrayFromEpsilonChain
@@ -251,15 +220,11 @@ class TableS: System {
             }
         }
     }
-    //INIT'S
-    override init() {
-        self.dictionary = [:]
-    }
 }
 class TableP: System {
     //DATA
-    var dictionary: [String: [String]]
-    var dictionary2: [String: [String]]
+    var dictionary: [String: [String]] = [:]
+    var dictionary2: [String: [String]] = [:]
     //CREATE DATA
     func createDictionary(tableS: TableS, alphabet: Alphabet, startVerticesS: StartVertices) {
         var indexCheck = 0
@@ -312,27 +277,22 @@ class TableP: System {
         self.dictionary2 = dictionaryP
         print(self.dictionary)
     }
-    //INIT'S
-    override init() {
-        self.dictionary = [:]
-        self.dictionary2 = [:]
-    }
 }
-class EndVertices: System {
+class EndVertices: System{
     //DATA
-    var valuesQ: [String]
-    var valuesS: [String]
-    var valuesP: [String]
+    var values: [String] = []
+    var valuesS: [String] = []
+    var valuesP: [String] = []
     //CREATE DATA
     func createValuesQ(vertices: Vertices, startVertices: StartVertices) {
         while true {
             let input = getDataFromUser(message: "▶ Введите конечную вершину из \(vertices.values):")
-            let defend = defend(stop: stopDefend(input, self.valuesQ, 1), defences: [!containDefend(input, vertices.values), containDefend(input,self.valuesQ), input == startVertices.valueQ])
+            let defend = defend(stop: stopDefend(input, self.values, 1), defences: [!containDefend(input, vertices.values), containDefend(input,self.values), input == startVertices.valueQ])
             if defend.0 == true {
                 return
             }
             if defend.1 == false {
-                self.valuesQ.append(input)
+                self.values.append(input)
             }else {
                 print(error)
             }
@@ -342,12 +302,12 @@ class EndVertices: System {
         var bin: [String] = []
         for i in epsilonClosure.dictionary.keys.sorted(by: {$0 < $1}) {
             if let value = epsilonClosure.dictionary[i] {
-                if Set(value) == Set(valuesS) || !Set(value).intersection(valuesQ).isEmpty {
+                if Set(value) == Set(valuesS) || !Set(value).intersection(values).isEmpty {
                     bin.append(i)
                 }
             }
         }
-        self.valuesS = replaceFirstLetter(array: bin, replaceable: "q", replaceOn: "S")
+        self.valuesS = bin.map({$0.replacing("q", with: "S")})
     }
     func createValuesP(tableP: TableP) {
         for i in tableP.dictionary2.keys.sorted(by: {$0 < $1}) {
@@ -358,19 +318,12 @@ class EndVertices: System {
             }
         }
     }
-    //INIT'S
-    init(valuesQ: [String]) {
-        self.valuesQ = valuesQ
-        self.valuesS = []
-        self.valuesP = []
-    }
-    override init() {
-        self.valuesQ = []
-        self.valuesS = []
-        self.valuesP = []
+    //INIT
+    init(values: [String]) {
+        self.values = values
     }
 }
-class checkWord: System {
+class CheckWord: System {
     //DATA
     var value: String
     //CREATE DATA
@@ -419,26 +372,23 @@ class checkWord: System {
             }
         }
     }
-    //INIT'S
+    //INIT
     init(value: String) {
         self.value = value
     }
-    override init() {
-        self.value = ""
-    }
 }
 
-var verticesObject = Vertices.init()
+var verticesObject = Vertices.init(values: [])
 verticesObject.createValues()
 print(verticesObject.values)
 
-var alphabetObject = Alphabet.init()
+var alphabetObject = Alphabet.init(values: [])
 alphabetObject.createValues()
 print(alphabetObject.values)
 
-var startVerticesObject = StartVertices.init()
+var startVerticesObject = StartVertices()
 
-var transitionsObject = Transitions.init()
+var transitionsObject = Transitions.init(dictionary: [:])
 transitionsObject.createDictionary(vertices: verticesObject, alphabet: alphabetObject)
 
 var epsilonClosureObject = EpsilonClosure.init()
@@ -455,12 +405,12 @@ var tablePObject = TableP.init()
 print("Таблица P:")
 tablePObject.createDictionary(tableS: TableSObject, alphabet: alphabetObject, startVerticesS: startVerticesObject)
 
-var endVerticesObject = EndVertices.init()
+var endVerticesObject = EndVertices.init(values: [])
 endVerticesObject.createValuesQ(vertices: verticesObject, startVertices: startVerticesObject)
 endVerticesObject.createValuesS(epsilonClosure: epsilonClosureObject)
 endVerticesObject.createValuesP(tableP: tablePObject)
 
-var checkWordObject = checkWord.init()
+var checkWordObject = CheckWord.init(value: "")
 checkWordObject.createValue(alphabet: alphabetObject)
 checkWordObject.checkWord(tableP: tablePObject, endVertices: endVerticesObject)
 
